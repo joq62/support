@@ -96,11 +96,20 @@ db_2()->
     ?assertEqual([1,2],support_mnesia_lib:bag_key_read(a)),
     ?assertEqual([1],support_mnesia_lib:bag_key_read(b)),
     
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_key_delete(a)),
+    ?assertEqual({atomic,[ok,ok]},support_mnesia_lib:bag_key_delete(a)),
     ?assertEqual([{b,1}],support_mnesia_lib:bag_read_all()),
 
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_key_update(b,10)),
-    ?assertEqual(10,support_mnesia_lib:bag_key_read(b)),
+    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(c,1)),
+    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(c,2)),
+    ?assertEqual([1,2],support_mnesia_lib:bag_key_read(c)),
+
+    ?assertEqual({atomic,ok},support_mnesia_lib:bag_delete(c,2)),
+    ?assertEqual([1],support_mnesia_lib:bag_key_read(c)),
+    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(c,2)),
+    ?assertEqual([1,2],support_mnesia_lib:bag_key_read(c)),
+
+    ?assertEqual({atomic,ok},support_mnesia_lib:bag_key_update(c,1,10)),
+    ?assertEqual([2,10],support_mnesia_lib:bag_key_read(c)),
     ok.
 
 %% --------------------------------------------------------------------

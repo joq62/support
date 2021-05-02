@@ -37,6 +37,7 @@
 	 bag_read_all/0,
 	 bag_key_read/1,
 	 bag_key_delete/1,
+	 bag_delete/2,
 	 bag_key_update/3
 	]).
 -define(WAIT_FOR_TABLES,5000).
@@ -144,8 +145,8 @@ bag_key_delete(Key)->
 		case Deployment of
 		    []->
 			mnesia:abort(generic_bag);
-		    [S1]->
-			mnesia:delete_object(S1) 
+		    Objects->
+			[mnesia:delete_object(Obj)||Obj<-Objects] 
 		end
 	end,
     mnesia:transaction(F).
@@ -163,8 +164,22 @@ bag_delete(Key,Value)->
 	end,
     mnesia:transaction(F).
 bag_key_update(Key,OldValue,NewValue)->
-    bag_delete(Key,OldValue),    
-    bag_create(Key,NewValue).
+    F = fun() -> 
+		Deployment=[X||X<-mnesia:read({generic_bag,Key}),
+			       X#generic_bag.key==Key,
+			       X#generic_bag.value==OldValue],
+		case Deployment of
+		    []->
+			mnesia:abort(generic_bag);
+		    [S1]->
+			mnesia:delete_object(S1), 
+			 Record=#generic_bag{
+				   key=Key,
+				   value=NewValue},
+			mnesia:write(Record) 
+		end
+	end,
+    mnesia:transaction(F).
 
 
 %% --------------------------------------------------------------------
