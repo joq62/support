@@ -84,9 +84,9 @@ ping()->
 %% Server functions
 %% ====================================================================
 -define(TestSuit,[{support_app_start_test,start,[],5*5000}
-		  ,{mnesia_lib_test,start,[],4*5000} %%%,
-		  %{dbase_init_test,start,[],5*5000},
-		  %{dbase_cluster_test,start,[],5*5000}
+		  ,{mnesia_lib_test,start,[],4*5000}
+		  ,{misc_log_test,start,[],5*5000}
+		  %,{dbase_cluster_test,start,[],5*5000}
 		 ]).
 %% --------------------------------------------------------------------
 %% Function: init/1

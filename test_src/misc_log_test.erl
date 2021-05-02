@@ -4,7 +4,7 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(mnesia_lib_test).   
+-module(misc_log_test).   
    
 %% --------------------------------------------------------------------
 %% Include files
@@ -53,7 +53,8 @@ start()->
 %% Returns: non
 %% --------------------------------------------------------------------
 setup()->
-    ok=support_mnesia_lib:start().
+    
+    ok=misc_log:start().
 
 
 %% --------------------------------------------------------------------
@@ -62,23 +63,26 @@ setup()->
 %% Returns: non
 %% -------------------------------------------------------------------    
 db_1()->
-    ?assertEqual({atomic,ok},support_mnesia_lib:set_create(a,1)),
-    ?assertEqual([{a,1}],support_mnesia_lib:set_read_all()),
-    ?assertEqual({atomic,ok},support_mnesia_lib:set_create(a,2)),
-    ?assertEqual([{a,2}],support_mnesia_lib:set_read_all()),
-    ?assertEqual({atomic,ok},support_mnesia_lib:set_create(b,1)),
-    ?assertEqual([{b,1},{a,2}],support_mnesia_lib:set_read_all()),
-    ?assertEqual(2,support_mnesia_lib:set_key_read(a)),
-    ?assertEqual(1,support_mnesia_lib:set_key_read(b)),
+    ?assertEqual({atomic,ok},misc_log:alert({date(),time()},
+					     ?MODULE,?FUNCTION_NAME,?LINE,
+					     "alert 1")),
+    ?assertEqual({atomic,ok},misc_log:ticket({date(),time()},
+					     ?MODULE,?FUNCTION_NAME,?LINE,
+					     "ticket 1")),
+    ?assertEqual({atomic,ok},misc_log:info({date(),time()},
+					     ?MODULE,?FUNCTION_NAME,?LINE,
+					     "info 1")),
+     ?assertMatch([{alert,_,new,
+		    _,misc_log_test,db_1,_,"alert 1"},
+		   {info,_,new,
+		    _,misc_log_test,db_1,_,"info 1"},
+		   {ticket,_,new,
+		    _,misc_log_test,db_1,_,"ticket 1"}],misc_log:read_all()),
     
-    ?assertEqual({atomic,ok},support_mnesia_lib:set_key_delete(a)),
-    ?assertEqual([{b,1}],support_mnesia_lib:set_read_all()),
-
-    ?assertEqual({atomic,ok},support_mnesia_lib:set_key_update(b,10)),
-    ?assertEqual(10,support_mnesia_lib:set_key_read(b)),
     
-    ?assertEqual({atomic,ok},support_mnesia_lib:set_key_delete(b)),
-    ?assertEqual([],support_mnesia_lib:set_read_all()),
+      ?assertMatch([{alert,_,new,_,misc_log_test,db_1,_,"alert 1"}],misc_log:severity_read(alert)),
+      ?assertMatch([{ticket,_,new,_,misc_log_test,db_1,_,"ticket 1"}],misc_log:severity_read(ticket)),
+      ?assertMatch([{info,_,new,_,misc_log_test,db_1,_,"info 1"}],misc_log:severity_read(info)),
     ok.
 
 %% --------------------------------------------------------------------
@@ -87,29 +91,7 @@ db_1()->
 %% Returns: non
 %% -------------------------------------------------------------------    
 db_2()->
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(a,1)),
-    ?assertEqual([{a,1}],support_mnesia_lib:bag_read_all()),
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(a,2)),
-    ?assertEqual([{a,1},{a,2}],support_mnesia_lib:bag_read_all()),
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(b,1)),
-    ?assertEqual([{b,1},{a,1},{a,2}],support_mnesia_lib:bag_read_all()),
-    ?assertEqual([1,2],support_mnesia_lib:bag_key_read(a)),
-    ?assertEqual([1],support_mnesia_lib:bag_key_read(b)),
-    
-    ?assertEqual({atomic,[ok,ok]},support_mnesia_lib:bag_key_delete(a)),
-    ?assertEqual([{b,1}],support_mnesia_lib:bag_read_all()),
-
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(c,1)),
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(c,2)),
-    ?assertEqual([1,2],support_mnesia_lib:bag_key_read(c)),
-
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_delete(c,2)),
-    ?assertEqual([1],support_mnesia_lib:bag_key_read(c)),
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_create(c,2)),
-    ?assertEqual([1,2],support_mnesia_lib:bag_key_read(c)),
-
-    ?assertEqual({atomic,ok},support_mnesia_lib:bag_key_update(c,1,10)),
-    ?assertEqual([2,10],support_mnesia_lib:bag_key_read(c)),
+  
     ok.
 
 %% --------------------------------------------------------------------
@@ -119,7 +101,7 @@ db_2()->
 %% -------------------------------------------------------------------    
 
 cleanup()->
-%    init:stop(),
+    init:stop(),
     ok.
 %% --------------------------------------------------------------------
 %% Function:start/0 

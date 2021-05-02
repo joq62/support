@@ -9,59 +9,132 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--define(TerminalVmId,"terminal").
--define(Terminal,'terminal@c2').
--define(LogTerminals,['log_terminal@c2',
-		      'log_terminal@c1',
-		      'log_terminal@c0']).
--define(AlertTicketTerminals,['alert_ticket_terminal@c2',
-			      'alert_ticket_terminal@c1',
-			      'alert_ticket_terminal@c0']).
--define(Masters,['master@c2','master@c1','master@c0',
-		 'boot_master@c2','boot_master@c1','boot_master@c0',
-		'test_dbase@c2']).
--define(SyslogNodes,['syslog@c2','syslog@c1','syslog@c0']).
+
+-import(lists, [foreach/2]).
+-include_lib("stdlib/include/qlc.hrl").
 %%---------------------------------------------------------------------
 %% Records for test
 %%
 
 %% --------------------------------------------------------------------
--compile(export_all).
 
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
-syslog_nodes()->
-    ?SyslogNodes.
 
-
-msg(Type,MsgList,Node,Module,Line)->
-    rpc:cast(node(),rpc,multicall,[?SyslogNodes,syslog,Type,
-				   [MsgList,Node,Module,Line],2000]).
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-node(Name)->
-    {ok,HostId}=net:gethostname(),
-    list_to_atom(Name++"@"++HostId).
+
+%% --------------------------------------------------------------------
+-record(log,{
+	     severity,
+	     id,
+	     status,
+	     time,
+	     module,
+	     function,
+	     line,
+	      info
+	    }).
+
+
+%% External exports
+-export([start/0,
+	 alert/5,
+	 ticket/5,
+	 info/5,
+	 read_all/0,
+	 severity_read/1
+	]).
+
+-define(WAIT_FOR_TABLES,5000).
+
+%% ====================================================================
+%% External functions
+%% ====================================================================
+
+%% --------------------------------------------------------------------
+%% Function:tes cases
+%% Description: List of test cases 
+%% Returns: non
+%% --------------------------------------------------------------------
+
+start()->
+    mnesia:create_table(log,[{attributes, record_info(fields,log)},
+			    {type,bag}]),
+    mnesia:wait_for_tables([log], 20000),
+    ok.
+
+
+
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-get_log_terminals()->
-    VmStrList=[{string:lexemes([atom_to_list(Node)],"@"),Node}||Node<-[node()|nodes()]],
-    [Node||{[?TerminalVmId,_],Node}<-VmStrList].
-   % VmStrList.    
-					       
 
-log_terminals()->
-    ?LogTerminals.
-alert_ticket_terminals()->
-    ?AlertTicketTerminals.
+do(Q) ->
+  F = fun() -> qlc:e(Q) end,
+  {atomic, Val} = mnesia:transaction(F),
+  Val.
 
-masters()->
-    ?Masters.
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+alert(Time,Module,Function,Line,Info)->
+    Record=#log{
+	      severity=alert,
+	      id=os:system_time(micro_seconds),
+	      status=new,	      
+	      time=Time,
+	      module=Module,
+	      function=Function,
+	      line=Line,
+	      info=Info},
+    F = fun() -> mnesia:write(Record) end,
+    mnesia:transaction(F).
+ticket(Time,Module,Function,Line,Info)->
+    Record=#log{
+	      severity=ticket,
+	      id=os:system_time(micro_seconds),
+	      status=new,	      
+	      time=Time,
+	      module=Module,
+	      function=Function,
+	      line=Line,
+	      info=Info},
+    F = fun() -> mnesia:write(Record) end,
+    mnesia:transaction(F).
+
+info(Time,Module,Function,Line,Info)->
+    Record=#log{
+	      severity=info,
+	      id=os:system_time(micro_seconds),
+	      status=new,	      
+	      time=Time,
+	      module=Module,
+	      function=Function,
+	      line=Line,
+	      info=Info},
+    F = fun() -> mnesia:write(Record) end,
+    mnesia:transaction(F).
+read_all()->
+    Z=do(qlc:q([X || X <- mnesia:table(log)])),
+    [{Severity,Id,Status,Time,Modul,Function,Line,Info}||{log,Severity,Id,Status,Time,Modul,Function,Line,Info}<-Z].
+
+severity_read(Severity) ->
+    Z=do(qlc:q([X || X <- mnesia:table(log),
+		   X#log.severity==Severity])),
+    [{Severity,Id,Status,Time,Modul,Function,Line,Info}||{log,Severity,Id,Status,Time,Modul,Function,Line,Info}<-Z].
+
+
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
