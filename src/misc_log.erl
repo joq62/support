@@ -50,7 +50,8 @@
 	 read_all/0,
 	 severity_read/1,
 	 print/1,
-	 print/2
+	 print/2,
+	 print_new/0
 	]).
 
 -define(WAIT_FOR_TABLES,5000).
@@ -85,7 +86,12 @@ print(WantedSeverity,MaxNum)->
     DateTimeInSec=[{Id,{Severity,Id,Status,DateTime,Modul,Function,Line,Info}}||
 		      {Severity,Id,Status,DateTime,Modul,Function,Line,Info}<-All,
 		      WantedSeverity==Severity],
-    lists:sublist(lists:reverse(sort(DateTimeInSec)),MaxNum).    
+    lists:sublist(lists:reverse(sort(DateTimeInSec)),MaxNum).
+print_new()->    
+    All=read_all(),
+    DateTimeInSec=[{Id,{Severity,Id,new,DateTime,Modul,Function,Line,Info}}||
+		      {Severity,Id,new,DateTime,Modul,Function,Line,Info}<-All],
+    lists:reverse(sort(DateTimeInSec)).
 %% --------------------------------------------------------------------
 %% Function:tes cases
 %% Description: List of test cases 

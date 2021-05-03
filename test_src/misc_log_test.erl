@@ -75,16 +75,25 @@ db_1()->
 		  {ticket,_,new,
 		   _,misc_log_test,db_1,_,"ticket 1"}],misc_log:read_all()),
     
-    
+    ?assertMatch([
+		  {info,_,new,_,misc_log_test,db_1,_,"info 1"},
+		  {ticket,_,new,_,misc_log_test,db_1,_,"ticket 1"},
+		  {alert,_,new,_,misc_log_test,db_1,_,"alert 1"}
+		 ],misc_log:print_new()),
+
     ?assertMatch([{alert,_,_,misc_log_test,db_1,_,"alert 1"}],misc_log:severity_read(alert)),
     ?assertMatch([{ticket,_,_,misc_log_test,db_1,_,"ticket 1"}],misc_log:severity_read(ticket)),
     ?assertMatch([{info,_,_,misc_log_test,db_1,_,"info 1"}],misc_log:severity_read(info)),
+
+    ?assertMatch([],misc_log:print_new()),
 
     ?assertEqual({atomic,ok},?LogAlert("alert 2")),
     ?assertMatch([{alert,_,read,_,misc_log_test,db_1,_,"alert 1"},
                       {alert,_,new,_,misc_log_test,db_1,_,"alert 2"},
                       {info,_,read,_,misc_log_test,db_1,_,"info 1"},
                       {ticket,_,read,_,misc_log_test,db_1,_,"ticket 1"}],misc_log:read_all()),
+    ?assertMatch([{alert,_,new,_,misc_log_test,db_1,_,"alert 2"}
+		 ],misc_log:print_new()),
 
     ?assertMatch([{alert,_,_,misc_log_test,db_1,_,"alert 2"}],misc_log:severity_read(alert)),
     ?assertMatch([],misc_log:severity_read(ticket)),
