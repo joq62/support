@@ -10,6 +10,7 @@
 %% Include files
 %% --------------------------------------------------------------------
 -include_lib("eunit/include/eunit.hrl").
+-include("../include/log.hrl").
 %% --------------------------------------------------------------------
 
 %% External exports
@@ -62,27 +63,32 @@ setup()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% -------------------------------------------------------------------    
+
 db_1()->
-    ?assertEqual({atomic,ok},misc_log:alert({date(),time()},
-					     ?MODULE,?FUNCTION_NAME,?LINE,
-					     "alert 1")),
-    ?assertEqual({atomic,ok},misc_log:ticket({date(),time()},
-					     ?MODULE,?FUNCTION_NAME,?LINE,
-					     "ticket 1")),
-    ?assertEqual({atomic,ok},misc_log:info({date(),time()},
-					     ?MODULE,?FUNCTION_NAME,?LINE,
-					     "info 1")),
-     ?assertMatch([{alert,_,new,
-		    _,misc_log_test,db_1,_,"alert 1"},
-		   {info,_,new,
-		    _,misc_log_test,db_1,_,"info 1"},
-		   {ticket,_,new,
-		    _,misc_log_test,db_1,_,"ticket 1"}],misc_log:read_all()),
+    ?assertEqual({atomic,ok},?LogAlert("alert 1")),
+    ?assertEqual({atomic,ok},?LogTicket("ticket 1")),
+    ?assertEqual({atomic,ok},?LogInfo("info 1")),
+    ?assertMatch([{alert,_,new,
+		   _,misc_log_test,db_1,_,"alert 1"},
+		  {info,_,new,
+		   _,misc_log_test,db_1,_,"info 1"},
+		  {ticket,_,new,
+		   _,misc_log_test,db_1,_,"ticket 1"}],misc_log:read_all()),
     
     
-      ?assertMatch([{alert,_,new,_,misc_log_test,db_1,_,"alert 1"}],misc_log:severity_read(alert)),
-      ?assertMatch([{ticket,_,new,_,misc_log_test,db_1,_,"ticket 1"}],misc_log:severity_read(ticket)),
-      ?assertMatch([{info,_,new,_,misc_log_test,db_1,_,"info 1"}],misc_log:severity_read(info)),
+    ?assertMatch([{alert,_,_,misc_log_test,db_1,_,"alert 1"}],misc_log:severity_read(alert)),
+    ?assertMatch([{ticket,_,_,misc_log_test,db_1,_,"ticket 1"}],misc_log:severity_read(ticket)),
+    ?assertMatch([{info,_,_,misc_log_test,db_1,_,"info 1"}],misc_log:severity_read(info)),
+
+    ?assertEqual({atomic,ok},?LogAlert("alert 2")),
+    ?assertMatch([{alert,_,read,_,misc_log_test,db_1,_,"alert 1"},
+                      {alert,_,new,_,misc_log_test,db_1,_,"alert 2"},
+                      {info,_,read,_,misc_log_test,db_1,_,"info 1"},
+                      {ticket,_,read,_,misc_log_test,db_1,_,"ticket 1"}],misc_log:read_all()),
+
+    ?assertMatch([{alert,_,_,misc_log_test,db_1,_,"alert 2"}],misc_log:severity_read(alert)),
+    ?assertMatch([],misc_log:severity_read(ticket)),
+    ?assertMatch([],misc_log:severity_read(info)),
     ok.
 
 %% --------------------------------------------------------------------

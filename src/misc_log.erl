@@ -87,24 +87,24 @@ do(Q) ->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-alert(Time,Module,Function,Line,Info)->
+alert(DateTime,Module,Function,Line,Info)->
     Record=#log{
 	      severity=alert,
 	      id=os:system_time(micro_seconds),
 	      status=new,	      
-	      time=Time,
+	      time=DateTime,
 	      module=Module,
 	      function=Function,
 	      line=Line,
 	      info=Info},
     F = fun() -> mnesia:write(Record) end,
     mnesia:transaction(F).
-ticket(Time,Module,Function,Line,Info)->
+ticket(DateTime,Module,Function,Line,Info)->
     Record=#log{
 	      severity=ticket,
 	      id=os:system_time(micro_seconds),
 	      status=new,	      
-	      time=Time,
+	      time=DateTime,
 	      module=Module,
 	      function=Function,
 	      line=Line,
@@ -112,12 +112,12 @@ ticket(Time,Module,Function,Line,Info)->
     F = fun() -> mnesia:write(Record) end,
     mnesia:transaction(F).
 
-info(Time,Module,Function,Line,Info)->
+info(DateTime,Module,Function,Line,Info)->
     Record=#log{
 	      severity=info,
 	      id=os:system_time(micro_seconds),
 	      status=new,	      
-	      time=Time,
+	      time=DateTime,
 	      module=Module,
 	      function=Function,
 	      line=Line,
@@ -128,13 +128,35 @@ read_all()->
     Z=do(qlc:q([X || X <- mnesia:table(log)])),
     [{Severity,Id,Status,Time,Modul,Function,Line,Info}||{log,Severity,Id,Status,Time,Modul,Function,Line,Info}<-Z].
 
-severity_read(Severity) ->
-    Z=do(qlc:q([X || X <- mnesia:table(log),
-		   X#log.severity==Severity])),
-    [{Severity,Id,Status,Time,Modul,Function,Line,Info}||{log,Severity,Id,Status,Time,Modul,Function,Line,Info}<-Z].
 
+%calendar:datetime_to_gregorian_seconds({date(), time()}).
+
+severity_read_1(Severity) ->
+    Z=do(qlc:q([X || X <- mnesia:table(log),
+		     X#log.severity==Severity])),
+    New=[{XSeverity,Id,DateTime,Modul,Function,Line,Info}||{log,XSeverity,Id,new,DateTime,Modul,Function,Line,Info}<-Z],
+    New.
 
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
+severity_read(Severity) ->
+    Z=do(qlc:q([X || X <- mnesia:table(log),
+		     X#log.severity==Severity,
+		     X#log.status==new])),
+    New=[{XSeverity,Id,DateTime,Modul,Function,Line,Info}||{log,XSeverity,Id,new,DateTime,Modul,Function,Line,Info}<-Z],
+    F = fun() -> 
+		Log=do(qlc:q([X || X <- mnesia:table(log),
+				   X#log.severity==Severity,
+				   X#log.status==new])),
+		case Log of
+		    []->
+			mnesia:abort(log);
+		    NewInfo->
+			[mnesia:delete_object(S)||S<-NewInfo],
+			[mnesia:write(S#log{status=read})||S<-NewInfo]
+		end
+	end,
+    mnesia:transaction(F),
+    New.
