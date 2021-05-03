@@ -48,7 +48,9 @@
 	 ticket/5,
 	 info/5,
 	 read_all/0,
-	 severity_read/1
+	 severity_read/1,
+	 print/1,
+	 print/2
 	]).
 
 -define(WAIT_FOR_TABLES,5000).
@@ -57,6 +59,33 @@
 %% External functions
 %% ====================================================================
 
+
+
+sort([{Pivot,Log}|T]) ->
+    sort([ {P,I} || {P,I} <- T, P < Pivot]) ++
+    [Log] ++
+    sort([ {P,I} || {P,I} <- T, P >= Pivot]);
+sort([]) -> [];
+sort(X)->{error,X}.
+%% --------------------------------------------------------------------
+%% Function:tes cases
+%% Description: List of test cases 
+%% Returns: non
+%% --------------------------------------------------------------------
+print(MaxNum)->
+    All=read_all(),
+ %   DateTimeInSec=[{calendar:datetime_to_gregorian_seconds(DateTime),
+%		    {Severity,Id,Status,DateTime,Modul,Function,Line,Info}}||
+%		      {Severity,Id,Status,DateTime,Modul,Function,Line,Info}<-All],
+    DateTimeInSec=[{Id,{Severity,Id,Status,DateTime,Modul,Function,Line,Info}}||
+		      {Severity,Id,Status,DateTime,Modul,Function,Line,Info}<-All],
+    lists:sublist(lists:reverse(sort(DateTimeInSec)),MaxNum).
+print(WantedSeverity,MaxNum)->
+    All=read_all(),
+    DateTimeInSec=[{Id,{Severity,Id,Status,DateTime,Modul,Function,Line,Info}}||
+		      {Severity,Id,Status,DateTime,Modul,Function,Line,Info}<-All,
+		      WantedSeverity==Severity],
+    lists:sublist(lists:reverse(sort(DateTimeInSec)),MaxNum).    
 %% --------------------------------------------------------------------
 %% Function:tes cases
 %% Description: List of test cases 
@@ -131,11 +160,6 @@ read_all()->
 
 %calendar:datetime_to_gregorian_seconds({date(), time()}).
 
-severity_read_1(Severity) ->
-    Z=do(qlc:q([X || X <- mnesia:table(log),
-		     X#log.severity==Severity])),
-    New=[{XSeverity,Id,DateTime,Modul,Function,Line,Info}||{log,XSeverity,Id,new,DateTime,Modul,Function,Line,Info}<-Z],
-    New.
 
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc

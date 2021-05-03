@@ -97,7 +97,11 @@ db_1()->
 %% Returns: non
 %% -------------------------------------------------------------------    
 db_2()->
-  
+    ?assertMatch([{alert,_,read,_,misc_log_test,db_1,_,"alert 2"},
+		  {info,_,read,_,misc_log_test,db_1,_,"info 1"}],misc_log:print(2)),
+    ?assertMatch([{alert,_,read,_,misc_log_test,db_1,_,"alert 2"},
+		  {alert,_,read,_,misc_log_test,db_1,_,"alert 1"}],misc_log:print(alert,2)),
+    
     ok.
 
 %% --------------------------------------------------------------------
