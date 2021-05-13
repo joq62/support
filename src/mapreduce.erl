@@ -66,7 +66,7 @@ collect_replies(N,Dict) ->
  %   io:format("N= ~p~n",[{?MODULE,?LINE,N}]),
     receive
 	{Key,Value}->
-%	    io:format("~p~n",[{?MODULE,?LINE,Key,Value}]),
+	%    io:format("~p~n",[{?MODULE,?LINE,Key,Value}]),
 	    case dict:is_key(Key,Dict) of
 		true->
 		    Dict1=dict:append(Key,Value,Dict),
@@ -75,8 +75,8 @@ collect_replies(N,Dict) ->
 		    Dict1=dict:store(Key,[Value],Dict),
 		    collect_replies(N,Dict1)
 		end;
-	{'EXIT',_,_Why} ->
-%	    io:format("~p~n",[{?MODULE,?LINE,Why,Dict}]),
+	{'EXIT',_,Why} ->
+	%    io:format("~p~n",[{?MODULE,?LINE,Why,Dict}]),
 	    collect_replies(N-1,Dict)
     end.
 	    
