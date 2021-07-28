@@ -31,7 +31,9 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
-start_slave(NodeName,Args)->
+start_slave(NodeName)->
+    Cookie=atom_to_list(rpc:call(node(),erlang,get_cookie,[],5*1000)),
+    Args="-setcookie "++Cookie,
     {ok,Host}=inet:gethostname(),
     slave:start(Host,NodeName,Args).
 
