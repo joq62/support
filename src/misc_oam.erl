@@ -31,6 +31,10 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
+start_slave(NodeName,Args)->
+    {ok,Host}=inet:gethostname(),
+    slave:start(Host,NodeName,Args).
+
 
 print(Text,T)->
     rpc:call(?Terminal,terminal,print,[Text],T).
