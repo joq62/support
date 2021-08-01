@@ -21,6 +21,10 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
+date_time({Y,M,D},{H,Min,S})->
+    Date=print_date({Y,M,D}),
+    Time=print_time({H,Min,S}),
+    Date++"-"++Time.
 date_time()->
     Date=print_date(),
     Time=print_time(),
