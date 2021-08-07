@@ -33,6 +33,8 @@
 	]).
 
 -export([
+	 create_gen_bag/2,
+
 	 bag_create/2,
 	 bag_read_all/0,
 	 bag_key_read/1,
