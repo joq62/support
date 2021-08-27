@@ -1,7 +1,6 @@
 all:
 #	service
 	rm -rf ebin/*;
-	cp src/*.app ebin;
 	erlc -I ../interfaces -o ebin src/*.erl;
 	rm -rf src/*.beam *.beam  test_src/*.beam test_ebin;
 	rm -rf  *~ */*~  erl_cra*;

@@ -5,7 +5,7 @@
 %%% 
 %%% Created : 
 %%% -------------------------------------------------------------------
--module(support).  
+-module(support_server).  
 
 -behaviour(gen_server).
 %% --------------------------------------------------------------------
@@ -29,14 +29,7 @@
 %% --------------------------------------------------------------------
 
 % OaM related
--export([
-	 start_slave/1,
-	 boot/0]).
 
--export([start/0,
-	 stop/0,
-	 ping/0
-	]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3,handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -48,21 +41,6 @@
 
 %% Asynchrounus Signals
 
-boot()->
-    application:start(?MODULE).
-
-%% Gen server functions
-
-start()-> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
-stop()-> gen_server:call(?MODULE, {stop},infinity).
-
-
-start_slave(NodeName)-> 
-    gen_server:call(?MODULE, {start_slave,NodeName},infinity).
-
-
-ping()-> 
-    gen_server:call(?MODULE, {ping},infinity).
 
 %%-----------------------------------------------------------------------
 
@@ -95,12 +73,6 @@ init([]) ->
 %%          {stop, Reason, Reply, State}   | (terminate/2 is called)
 %%          {stop, Reason, State}            (aterminate/2 is called)
 %% --------------------------------------------------------------------
-handle_call({start_slave,NodeName},_From,State) ->
-    Cookie=erlang:get_cookie(),
-    Args="-setcookie "++Cookie,
-    {ok,Host}=inet:gethostname(),
-    Reply=slave:start(Host,NodeName,Args),
-    {reply, Reply, State};
 
 handle_call({ping},_From,State) ->
     Reply={pong,node(),?MODULE},
