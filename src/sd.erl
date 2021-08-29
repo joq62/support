@@ -57,19 +57,22 @@ cast(App,M,F,A)->
 %% --------------------------------------------------------------------
 all()->
     Apps=[{Node,rpc:call(Node,application,which_applications,[],5*1000)}||Node<-[node()|nodes()]],
-    AvailableNodes=[{Node,AppList}||{Node,AppList}<-Apps],
+    AvailableNodes=[{Node,AppList}||{Node,AppList}<-Apps,
+				    AppList/={badrpc,nodedown}],
     AvailableNodes.
     
 
 get(WantedApp)->
     Apps=[{Node,rpc:call(Node,application,which_applications,[],5*1000)}||Node<-[node()|nodes()]],
     AvailableNodes=[Node||{Node,AppList}<-Apps,
+			  AppList/={badrpc,nodedown},
 			  true==lists:keymember(WantedApp,1,AppList)],
     AvailableNodes.
 
 get(WantedApp,WantedNode)->
     Apps=[{Node,rpc:call(Node,application,which_applications,[],5*1000)}||Node<-[node()|nodes()]],
     AvailableNodes=[WantedNode||{Node,AppList}<-Apps,
+				AppList/={badrpc,nodedown},
 				true==lists:keymember(WantedApp,1,AppList),
 				Node==WantedNode],
     AvailableNodes.
