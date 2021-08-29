@@ -66,6 +66,7 @@ get(WantedApp)->
     Apps=[{Node,rpc:call(Node,application,which_applications,[],5*1000)}||Node<-[node()|nodes()]],
     AvailableNodes=[Node||{Node,AppList}<-Apps,
 			  AppList/={badrpc,nodedown},
+			  AppList/={badrpc,timeout},
 			  true==lists:keymember(WantedApp,1,AppList)],
     AvailableNodes.
 
@@ -73,6 +74,7 @@ get(WantedApp,WantedNode)->
     Apps=[{Node,rpc:call(Node,application,which_applications,[],5*1000)}||Node<-[node()|nodes()]],
     AvailableNodes=[WantedNode||{Node,AppList}<-Apps,
 				AppList/={badrpc,nodedown},
+				AppList/={badrpc,timeout},
 				true==lists:keymember(WantedApp,1,AppList),
 				Node==WantedNode],
     AvailableNodes.
