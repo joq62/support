@@ -10,5 +10,6 @@
 {mod, {support_app,[]}},
 {start_phases, []},
 {git_path,"https://github.com/joq62/support.git"},
-{env,[]}
+{env,[]},
+{hosts_needed,[]}
 ]}.
